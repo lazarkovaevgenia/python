@@ -1,0 +1,8 @@
+a = 10
+b = -7
+c = 0
+d = -17.67
+print(abs(a))
+print(abs(b))
+print(abs(c))
+print(abs(d))
