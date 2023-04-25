@@ -1,0 +1,59 @@
+! pip install openai
+
+import requests
+import pandas as pd
+import openai
+from time import sleep
+
+secret_key = "sk-YokWDHc1JdxQA2LZwti7QoQFmjuD"
+openai.api_key = secret_key
+
+original_df = pd.read_csv("textContent_part_1.csv")
+
+original_df["prompt"] = original_df["Text Content"]
+
+## remove unwanted characters from text
+original_df["prompt"] = original_df["prompt"].str.replace("\n", " ")
+original_df["prompt"] = original_df["prompt"].str.replace("\u200d", " ")
+
+def analyze_text(data):
+
+  urgency = []
+  technical = []
+
+  for text in data["prompt"]:
+
+    prompt = f"""
+    Rate the sense of urgency in this text on a scale from 1 to 10.  
+    Example: Don't miss out on this once-in-a-lifetime opportunity! Urgency: 10.
+    Example: Please do not rush, you can take all the time you need. Urgency: 1.
+    Text: {text}
+    Sentiment:"""
+    response = openai.Completion.create(engine="text-davinci-003", prompt=prompt, temperature=0.5, max_tokens=10)
+    urg = response["choices"][0]["text"].strip()
+    urgency.append(urg)
+    print("Sense of urgency is a", urg)
+
+    prompt = f"""
+    Rate how technical this text is on a scale from 1 to 10.
+    Example: The field-coupled nanomagnet logic gate employs the stochastic Landau-Lifshitz-Gilbert (LLG) dynamics. Technical: 10.  
+    Example: The sun shone brightly as the children laughed and played together in the park. Technical: 1.
+    Text: {text}
+    Sentiment:"""
+    response = openai.Completion.create(engine="text-davinci-003", prompt=prompt, temperature=0.5, max_tokens=10)
+    tech = response["choices"][0]["text"].strip()
+    technical.append(tech)
+    print("Technical level is a", tech)
+
+  responses = {
+  "Page": original_df["Page"],
+  "prompt": original_df["prompt"],
+  "urgency_original": original_df["Sense of Urgency"],
+  "technical_original": original_df["Technical"],
+  "Urgency": urgency,
+  "Technical": technical
+  }
+
+  return pd.DataFrame(responses)
+  
+ 
