@@ -1,0 +1,22 @@
+! pip install openai
+
+import openai
+import pandas as pd
+
+secret_key = "my_secret_key"
+openai.api_key = secret_key
+
+df = pd.read_csv("davinci_ft.csv")
+
+# define a function to rate the technical level of each text
+def rate_technical(text):
+    prompt = f"Rate the technical level of this text on a scale from 1 to 10.\nText: {text}\nTechnical level:"
+    response = openai.Completion.create(engine="davinci:ft-personal-2023-04-27-16-36-52", prompt=prompt, temperature=0.5, max_tokens=10)
+    rating_str = response.choices[0].text.strip().split("\n")[0]  # extract the first line of the response
+    return int(rating_str)
+
+# add a new column to the DataFrame with the technical rating for each text
+df["technical_rating"] = df["Text"].apply(rate_technical)
+
+# print out the DataFrame with the new column
+print(df)
