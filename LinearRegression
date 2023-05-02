@@ -1,0 +1,42 @@
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+
+# load data into a pandas dataframe
+data = pd.read_csv('data.csv')
+
+# replace the percentage sign with an empty string and convert the column to float
+# data['CVR'] = data['CVR'].str.replace('%', '').astype(float)
+
+# separate dependent and independent variables
+X = data[['Add to Cart', 'CVR']].values
+y = data['Revenue'].values
+
+# create a linear regression model
+model = LinearRegression()
+
+# fit the model to the data
+model.fit(X, y)
+
+# make predictions using the model
+predictions = model.predict(data[['Add to Cart', 'CVR']].values)
+
+# print the predictions
+print(predictions)
+
+
+
+# load data into a pandas dataframe
+data = pd.DataFrame({
+    'Add to Cart': [50],
+    'CVR': [8]
+})
+
+# create a linear regression model
+model = LinearRegression()
+
+# fit the model to the data
+model.fit(X, y)
+
+# make predictions using the model
+predictions = model.predict(data[['Add to Cart', 'CVR']].values)
+print(predictions)
