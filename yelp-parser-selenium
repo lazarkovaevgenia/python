@@ -1,0 +1,79 @@
+import time
+import csv
+import argparse
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
+
+
+# Argument parsing setup
+parser = argparse.ArgumentParser()
+parser.add_argument("link", help="Yelp page link")
+args = parser.parse_args()
+
+# List to store review information
+reviewList = []
+
+# Class to store individual review information
+class ReviewInfo:
+    def __init__(self, comment, commentLink, rating, ratingDate, profileName, profileLink):
+        self.comment = comment
+        self.commentLink = commentLink
+        self.rating = rating
+        self.ratingDate = ratingDate
+        self.profileName = profileName
+        self.profileLink = profileLink
+
+    def to_dict(self):
+        return {
+            'comment': self.comment,
+            'commentLink': self.commentLink,
+            'rating': self.rating,
+            'ratingDate': self.ratingDate,
+            'profileName': self.profileName,
+            'profileLink': self.profileLink,
+        }
+
+# Function to scrape Yelp reviews
+def getYelpReviews(yelpLink):
+    driver = webdriver.Safari()  # Use Safari WebDriver
+    driver.get(yelpLink)
+
+    pages_processed = 0
+    while pages_processed < 3:
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located(
+            (By.XPATH, "//div[contains(@class, 'raw__09f24__T4Ezm')]")))  # Corrected XPath
+        reviews = driver.find_elements_by_xpath("//div[contains(@class, 'raw__09f24__T4Ezm')]")  # Update this XPath
+
+        # TODO: Process each review here
+        for review in reviews:
+            # Extract review details (comment, rating, etc.)
+            # Make sure to handle exceptions and edge cases
+            pass  # Replace 'pass' with your code to process each review
+
+        time.sleep(10)  # Wait for 10 seconds before processing the next page
+
+        # Check for the 'Next' button and click it
+        try:
+            nextBtn = driver.find_element_by_css_selector(".css-1jq1ouh")  # CSS Selector for the 'Next' button
+            nextBtn.click()
+            pages_processed += 1
+        except NoSuchElementException:
+            break  # No more pages
+
+    driver.quit()
+
+# Function to create a CSV file from the scraped reviews
+def createCSV():
+    with open('reviews.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['ID', 'Comment', 'CommentLink', 'Rating', 'Rating Date', 'Profile Name', 'Profile Link'])
+        for idx, review in enumerate(reviewList, start=1):
+            writer.writerow([str(idx), review.comment, review.commentLink, review.rating, review.ratingDate, review.profileName, review.profileLink])
+
+# Main execution
+if __name__ == '__main__':
+    getYelpReviews(args.link)
+    createCSV()
