@@ -1,0 +1,63 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
+import time
+
+# Base URL of the site to check
+base_url = "https://indacloud.co"
+
+# GTM code to search for
+gtm_code = "GTM-5KP7CLVW"  # Replace XXXXXX with your GTM code
+
+# Set of URLs to check (to avoid duplicates)
+urls_to_check = {base_url}
+
+# Set of URLs already checked
+checked_urls = set()
+
+# Set up the Selenium WebDriver with headless Chrome
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+driver = webdriver.Chrome(options=chrome_options)
+
+# Function to check for GTM code in a given URL using Selenium
+def check_gtm(page_url, gtm_code):
+    try:
+        driver.get(page_url)
+        page_source = driver.page_source
+        if gtm_code in page_source:
+            return True
+        return False
+    except Exception as e:
+        print(f"Error checking {page_url}: {e}")
+        return False
+
+# Function to crawl the website and find internal links
+def crawl_site(page_url):
+    try:
+        driver.get(page_url)
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        for link in soup.find_all('a', href=True):
+            href = link['href']
+            if not href.startswith('http'):
+                href = urljoin(page_url, href)
+            if urlparse(href).netloc == urlparse(base_url).netloc:
+                urls_to_check.add(href)
+    except Exception as e:
+        print(f"Error crawling {page_url}: {e}")
+
+# Main loop to check each URL
+while urls_to_check:
+    url = urls_to_check.pop()
+    if url not in checked_urls:
+        print(f"Checking {url}...")
+        has_gtm = check_gtm(url, gtm_code)
+        if not has_gtm:
+            print(f"No GTM tag found on {url}")
+        crawl_site(url)  # Find more links to check
+        checked_urls.add(url)
+        time.sleep(1)  # Delay to avoid spam protection
+
+driver.quit()
+print("Finished checking all pages.")
